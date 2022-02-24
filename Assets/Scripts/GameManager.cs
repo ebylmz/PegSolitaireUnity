@@ -11,6 +11,9 @@ namespace pegsolitaire {
         [SerializeField] private Camera _camera;
         private List<Cell> _selectedCells;
         private Dictionary<Vector2Int, Cell> _cells;
+        private Stack<Movement> _allMov; // keeps all the movement made so far
+        private int _numMov; 
+        private int _numPeg; 
 
         // Start is called before the first frame update
         void Start() {
@@ -18,18 +21,38 @@ namespace pegsolitaire {
             _height = 9;
             _cells = createBoard();
             _selectedCells = new List<Cell>();
-
-            // change the position of the camera as center of the grid
+            _allMov = new Stack<Movement>();
+            _numMov = 0;
+            _numPeg = _cells.Count;
+            // change the position of the camera as shows center of the game board
             _camera.transform.position = new Vector3((float) _width / 2 - 1.5f, (float) _height / 2 - 1.5f, -10);
-
-            foreach(var e in _cells)
-                Debug.Log(e);
         }
 
         void Update() {
             getSelection();
+            
+            // checks randm movement
+            if (Input.GetKeyDown(KeyCode.W)) {
+                makeRandomMove();
+                StartCoroutine(Coroutine());
+            }
+            // checks undo
+            if (Input.GetKeyDown(KeyCode.S)) {
+                if (!undo())
+                    Debug.Log("No movement made yet");
+            }
         }   
 
+        IEnumerator Coroutine() {
+            //Print the time of when the function is first called.
+            // Debug.Log("Started Coroutine at timestamp : " + Time.time);
+
+            //yield on a new YieldInstruction that waits for 5 seconds.
+            yield return new WaitForSeconds(5);
+
+            //After we have waited 5 seconds print the time again.
+            // Debug.Log("Finished Coroutine at timestamp : " + Time.time);
+        }
         private Dictionary<Vector2Int, Cell> createBoard() {
             _cells = new Dictionary<Vector2Int, Cell>();
 
@@ -45,10 +68,6 @@ namespace pegsolitaire {
                 for (int x = n; x < m; ++x) 
                     InstantiateCell(new Vector2Int(y, x));
 
-            /*
-            if (_cells.TryGetValue(new Vector2Int(2, 3), out var cell))
-                cell.setEmpty();
-            */
             _cells[new Vector2Int(2, 3)].setValue(Cell.CellValue.Empty);
             return _cells;
         }
@@ -73,7 +92,13 @@ namespace pegsolitaire {
                             // clear the list after movement made
                             if (_selectedCells.Count == 2) {
                                 // make movement 
-                                if (! makeMove(_selectedCells[0], _selectedCells[1])) {
+                                if (makeMove(_selectedCells[0], _selectedCells[1])) {
+                                    // after a valid movement check if game is over
+                                    if (isGameOver()) //! Game is over shows only in user mod so do something else
+                                        Debug.Log($"GAME IS OVER \n#Mov: {_numMov} #Peg: {_numPeg}");
+                                } 
+                                
+                                else {
                                     // turn back the previos values to cell
                                     // first cell was peg, second one was empty cell
                                     _selectedCells[0].setValue(Cell.CellValue.Peg);
@@ -90,7 +115,6 @@ namespace pegsolitaire {
         public bool makeMove(Cell start, Cell end) {
             Movement mov = new Movement(_cells, start, end);
             if (mov.isValidMovement()) {
-                Debug.Log("Valid movement");
                 Cell jump = mov.getJump();
 
                 // update the cell values    
@@ -98,29 +122,89 @@ namespace pegsolitaire {
                 jump.setValue(Cell.CellValue.Empty);
                 end.setValue(Cell.CellValue.Peg);
 
-                //! update game status (numMov, numPeg)
-
+                // update game status (numMov, numPeg)
+                ++_numMov;
+                --_numPeg;
+                _allMov.Push(mov);
                 return true;
             }
-            else 
-                Debug.Log("InValid movement");
-
+            Debug.Log("Invalid Movement");
             return false;
         }
 
+        public bool makeMove(Movement mov) {return mov != null ? makeMove(mov.getStart(), mov.getEnd()) : false;}
+
         public bool makeRandomMove() {
-            //! NOT IMPLEMENTED YET
+            int x = Random.Range(0, _width);
+            int y = Random.Range(0, _height);
+
+            for (int i = 0; i < _width; ++i) {
+                for (int j = 0; ++j < _height; ++j) {
+                    if (_cells.TryGetValue(new Vector2Int(x, y), out Cell start)) {
+                        var movs = getAllMovements(start);
+                        // select an random movement and apply it
+                        if (movs != null)
+                            return makeMove(movs[Random.Range(0, movs.Count)]); // returns always true
+                    }
+                    // iterate in y axis
+                    y = (y + 1 < _height) ? y + 1 : 0; 
+                }
+                // iterate in x axis
+                x = (x + 1 < _width) ? x + 1 : 0; 
+            }
+            return false; 
+        }
+
+        public bool undo() {
+            if (_allMov.Count > 0) {
+                var mov = _allMov.Pop();
+                // update the cell values    
+                mov.getStart().setValue(Cell.CellValue.Peg);
+                mov.getJump().setValue(Cell.CellValue.Peg);
+                mov.getEnd().setValue(Cell.CellValue.Empty);
+
+                // update game status (numMov, numPeg)
+                --_numMov;
+                ++_numPeg;
+                return true;
+            }
+            return false;
+        }
+
+    // conver this to all possible movements method 
+    // sleect randomly one movement in makerandommovement methdo
+        /* returns all the possible movement that can be made with given cell */
+        public List<Movement> getAllMovements(Cell start) {
+            List<Movement> allMov = new List<Movement>();
+
+            if (start.getValue() == Cell.CellValue.Peg || start.getValue() == Cell.CellValue.Selected) {
+                // try the four movement direction
+                for (int dir = 0; dir < 4; ++dir) {
+                    Movement mov = new Movement(_cells);
+                    mov.setMovement(start, (Movement.Direction) dir);
+                    if (mov.isValidMovement())
+                        allMov.Add(mov);
+                }
+            }
+
+            // return null istead of empty list
+            return allMov.Count > 0 ? allMov : null; 
+        }
+
+        public bool isGameOver() {
+            // check if a movement can be made with any cell 
+            foreach (var cell in _cells.Values) 
+                if (getAllMovements(cell) != null)
+                    return false;
             return true;
         }
 
-        public bool isGameOver() {return true;}
-        public void undo() {}
         public void saveGame() {}
         public void loadGame() {}
 
         private Cell InstantiateCell(Vector2Int pos) {
             Cell cell = Instantiate(_cellPrefab, new Vector3(pos.y, pos.x, 0), Quaternion.identity);
-            cell.Init(pos.ToString(), pos, Cell.CellValue.Peg);
+            cell.Init(pos, Cell.CellValue.Peg);
             _cells.Add(pos, cell);
             return cell;
         }

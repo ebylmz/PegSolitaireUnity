@@ -15,7 +15,6 @@ public class Cell : MonoBehaviour {
 
     // Start is called before the first frame update
     private void Start() {
-        Debug.Log("Start method called");
         // _rend = GetComponent<Renderer>();
         // __isSelected = false;
         // GetComponent<MeshRenderer>().enabled = false;
@@ -26,11 +25,12 @@ public class Cell : MonoBehaviour {
 
     }
 
-    public void Init(string name, Vector2Int loc, CellValue val) {
-        this.name = name;
+    public void Init(Vector2Int loc, CellValue val) {
+        this.name = loc.ToString();
         _loc = loc;
+        // first get the renderer since function setValue uses renderer
         _rend = GetComponent<Renderer>();
-        setValue(val);
+        setValue(val);  
     }
 
     public void setLocation(Vector2Int loc) {_loc = loc;}
