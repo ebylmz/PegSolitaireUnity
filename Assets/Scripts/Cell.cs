@@ -14,22 +14,13 @@ public class Cell : MonoBehaviour {
     public enum CellValue {PEG, EMPTY, SELECTED, PREDICTED};
 
     // Start is called before the first frame update
-    private void Start() {
-        // _rend = GetComponent<Renderer>();
-        // __isSelected = false;
-        // GetComponent<MeshRenderer>().enabled = false;
-    }
-
-    // Update is called once per frame
-    private void Update() {
-
+    private void Awake() {
+        _rend = GetComponent<Renderer>();
     }
 
     public void Init(Vector2Int pos, CellValue val) {
         this.name = pos.ToString();
         _pos = pos;
-        // first get the renderer since function setValue uses renderer
-        _rend = GetComponent<Renderer>();
         setValue(val);  
     }
 

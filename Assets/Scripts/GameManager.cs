@@ -2,6 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
+
+//* SceneManager.LoadScene("Scenes/GameScene");
 
 namespace pegsolitaire {
     public class GameManager : MonoBehaviour {
@@ -23,18 +26,17 @@ namespace pegsolitaire {
         public enum GameMode {USER, COMPUTER}
 
         // Start is called before the first frame update
-        void Start() {
+        void Awake() {
             _cells = new Dictionary<Vector2Int, Cell>();
             _selectedCells = new List<Cell>();
             _allMov = new Stack<Movement>();
             _numberOfMovement = GameObject.Find("Canvas/NumberOfMovement").GetComponent<TMPro.TextMeshProUGUI>();
-
             createBoard(BoardType.DIAMOND);
             // _numMov = 0;
             // _numPeg = _cells.Count;
 
             // change the position of the camera as shows center of the game board
-            _camera.transform.position = new Vector3((float) _width / 2 - 0.5f, (float) _height / 2 - 0.5f, -10);
+            _camera.transform.position = new Vector3((float) _width / 2 - 0.5f, (float) _height / 2 , -10);
         }
 
         void Update() {
@@ -48,8 +50,12 @@ namespace pegsolitaire {
                 undo();
         }   
 
+        public void init() {
+            gameObject.SetActive(true);
+        }
+
         /* gets the cell selected by user */
-        private void getSelection() {
+        public void getSelection() {
             if (Input.GetMouseButtonDown(0)) {
                 // get the current posation of the mouse
                 // then capture the cell at that posation (if there is)
@@ -70,8 +76,10 @@ namespace pegsolitaire {
                                 // make movement 
                                 if (makeMove(_selectedCells[0], _selectedCells[1])) {
                                     // after a valid movement check if game is over
-                                    if (isGameOver()) //! Game is over shows only in user mod so do something else
+                                    if (isGameOver()) {
                                         Debug.Log($"GAME IS OVER \n#Mov: {_numMov} #Peg: {_numPeg}");
+                                        SceneManager.LoadScene("Scenes/MainMenuScene");
+                                    } //! Game is over shows only in user mod so do something else
                                 } 
                                 
                                 else {
@@ -232,6 +240,10 @@ namespace pegsolitaire {
                 }
             }  
             //! it would be great to return succes return value 
+        }
+
+        public void exitGame() {
+            SceneManager.LoadScene("Scenes/MainMenuScene");
         }
 
         private void updateGameStatus() {
