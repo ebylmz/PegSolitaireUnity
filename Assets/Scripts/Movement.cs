@@ -11,7 +11,7 @@ namespace pegsolitaire {
         private Cell _jump; // jump position of movement (between start and end)
         private Cell _end; // end position of movement
         
-        public enum Direction {Up, Down, Left, Right};
+        public enum Direction {UP, DOWN, LEFT, RIGHT};
 
         public Movement(Dictionary<Vector2Int, Cell> board, Cell start, Cell end) {
             _board = board;
@@ -38,7 +38,7 @@ namespace pegsolitaire {
         public Cell getEnd() {return _end;}
 
         public void setStart(Cell start) {
-            if (_board.ContainsValue(start)) // && start.getValue() == Cell.CellValue.Peg // may be in selected mode 
+            if (_board.ContainsValue(start)) // && start.getValue() == Cell.CellValue.PEG // may be in selected mode 
                 _start = start;
             else {
                 _start = null;
@@ -52,39 +52,39 @@ namespace pegsolitaire {
             else {
                 // a movement is either horizontal (right, left) or vertical(up, down)
                 // so there is two possible cases for valid movement
-                var startLoc = _start.getLocation();
-                var endLoc = _end.getLocation();
+                var startPos = _start.getPosition();
+                var endPos = _end.getPosition();
                 int jumpx = -1, jumpy = -1; // jump cell location
                 
                 // vertical movement
-                if (startLoc.x == endLoc.x) {
-                    jumpx = startLoc.x;
+                if (startPos.x == endPos.x) {
+                    jumpx = startPos.x;
                     
-                    int diff = endLoc.y - startLoc.y;
+                    int diff = endPos.y - startPos.y;
                     if (diff == 2) // up movement
-                        jumpy = endLoc.y - 1;
+                        jumpy = endPos.y - 1;
                     else if (diff == -2) // down movement 
-                        jumpy = endLoc.y + 1;
+                        jumpy = endPos.y + 1;
                 }
                 // horizontal movement  
-                else if (startLoc.y == endLoc.y) {
-                    jumpy = startLoc.y;
+                else if (startPos.y == endPos.y) {
+                    jumpy = startPos.y;
 
-                    int diff = endLoc.x - startLoc.x;
+                    int diff = endPos.x - startPos.x;
                     if (diff == 2) // right movement  
-                        jumpx = endLoc.x - 1;
+                        jumpx = endPos.x - 1;
                     else if (diff == -2) // left movement
-                        jumpx = endLoc.x + 1; 
+                        jumpx = endPos.x + 1; 
                 }
 
                 // set jump cell null if this is an invalid movement
-                _jump = (_board.TryGetValue(new Vector2Int(jumpx, jumpy), out var jumpCell) && jumpCell.getValue() == Cell.CellValue.Peg) ?
+                _jump = (_board.TryGetValue(new Vector2Int(jumpx, jumpy), out var jumpCell) && jumpCell.getValue() == Cell.CellValue.PEG) ?
                             jumpCell : null;
             }
         }
 
         public void setEnd(Cell end) {
-            if (_board.ContainsValue(end)) // && end.getValue() == Cell.CellValue.Empty 
+            if (_board.ContainsValue(end)) // && end.getValue() == Cell.CellValue.EMPTY 
                 _end = end;
             else {
                 _end = null;
@@ -95,17 +95,17 @@ namespace pegsolitaire {
         public bool setMovement(Cell start, Direction d) {
             try {
                 setStart(start);
-                Vector2Int startLoc = start.getLocation();
+                Vector2Int startPos = start.getPosition();
 
                 switch (d) {
-                    case Direction.Up:
-                        setEnd(getEndUp(startLoc)); break;
-                    case Direction.Down: 
-                        setEnd(getEndDown(startLoc)); break;
-                    case Direction.Left: 
-                        setEnd(getEndLeft(startLoc)); break;
-                    case Direction.Right: 
-                        setEnd(getEndRight(startLoc)); break;
+                    case Direction.UP:
+                        setEnd(getEndUp(startPos)); break;
+                    case Direction.DOWN: 
+                        setEnd(getEndDown(startPos)); break;
+                    case Direction.LEFT: 
+                        setEnd(getEndLeft(startPos)); break;
+                    case Direction.RIGHT: 
+                        setEnd(getEndRight(startPos)); break;
                 }
                 setJump();
             }
@@ -115,20 +115,20 @@ namespace pegsolitaire {
             return _jump != null;
         }
 
-        private Cell getEndUp(Vector2Int startLoc) {
-            return (_board.TryGetValue(new Vector2Int(startLoc.x, startLoc.y + 2), out Cell end)) ? end : null;
+        private Cell getEndUp(Vector2Int startPos) {
+            return (_board.TryGetValue(new Vector2Int(startPos.x, startPos.y + 2), out Cell end)) ? end : null;
         }
 
-        private Cell getEndDown(Vector2Int startLoc) {
-            return (_board.TryGetValue(new Vector2Int(startLoc.x, startLoc.y - 2), out Cell end)) ? end : null;
+        private Cell getEndDown(Vector2Int startPos) {
+            return (_board.TryGetValue(new Vector2Int(startPos.x, startPos.y - 2), out Cell end)) ? end : null;
         }
 
-        private Cell getEndLeft(Vector2Int startLoc) {
-            return (_board.TryGetValue(new Vector2Int(startLoc.x - 2, startLoc.y), out Cell end)) ? end : null;
+        private Cell getEndLeft(Vector2Int startPos) {
+            return (_board.TryGetValue(new Vector2Int(startPos.x - 2, startPos.y), out Cell end)) ? end : null;
         }
 
-        private Cell getEndRight(Vector2Int startLoc) {
-            return (_board.TryGetValue(new Vector2Int(startLoc.x + 2, startLoc.y), out Cell end)) ? end : null;
+        private Cell getEndRight(Vector2Int startPos) {
+            return (_board.TryGetValue(new Vector2Int(startPos.x + 2, startPos.y), out Cell end)) ? end : null;
         }
 
         public bool isValidMovement() {
@@ -137,9 +137,9 @@ namespace pegsolitaire {
 
             // Debug.Log($"Start value: {_start.getValue()}\nJump value : {_jump.getValue()} \nEnd value  : {_end.getValue()}");
 
-            return  (_start.getValue() == Cell.CellValue.Peg || _start.getValue() == Cell.CellValue.Selected) && 
-                    (_jump != null && _jump.getValue() == Cell.CellValue.Peg) &&
-                    (_end.getValue() == Cell.CellValue.Selected || _end.getValue() == Cell.CellValue.Empty || _end.getValue() == Cell.CellValue.Predicted);
+            return  (_start.getValue() == Cell.CellValue.PEG || _start.getValue() == Cell.CellValue.SELECTED) && 
+                    (_jump != null && _jump.getValue() == Cell.CellValue.PEG) &&
+                    (_end.getValue() == Cell.CellValue.SELECTED || _end.getValue() == Cell.CellValue.EMPTY || _end.getValue() == Cell.CellValue.PREDICTED);
         }
     }
 }
