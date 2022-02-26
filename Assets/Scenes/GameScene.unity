@@ -311,7 +311,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1404946057}
         m_TargetAssemblyTypeName: pegsolitaire.GameManager, Assembly-CSharp
-        m_MethodName: makeRandomMove
+        m_MethodName: MakeRandomMove
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -736,7 +736,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1404946057}
         m_TargetAssemblyTypeName: pegsolitaire.GameManager, Assembly-CSharp
-        m_MethodName: saveGame
+        m_MethodName: SaveGame
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -951,7 +951,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1404946057}
         m_TargetAssemblyTypeName: pegsolitaire.GameManager, Assembly-CSharp
-        m_MethodName: undo
+        m_MethodName: Undo
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1128,7 +1128,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1404946057}
         m_TargetAssemblyTypeName: pegsolitaire.GameManager, Assembly-CSharp
-        m_MethodName: exitGame
+        m_MethodName: ExitGame
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

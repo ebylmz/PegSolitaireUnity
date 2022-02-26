@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class BoardManager : MonoBehaviour
 {
@@ -13,18 +14,23 @@ public class BoardManager : MonoBehaviour
     private int _selectedOption;
 
     private void Start() {
-        _selectedOption = 0;
+        if (PlayerPrefs.HasKey("_selectedOption"))
+            Load();
+        else
+            _selectedOption = 0;
         UpdateBoard();
     }
 
     public void NextOption() {
         _selectedOption = (_selectedOption + 1 < _boardDB.BoardCount) ? _selectedOption + 1 : 0; 
         UpdateBoard();
+        Save();
     }
 
     public void backOption() {
         _selectedOption = (_selectedOption - 1 >= 0) ? _selectedOption - 1 : _boardDB.BoardCount - 1; 
         UpdateBoard();
+        Save();
     }
 
     private void UpdateBoard() {
@@ -32,5 +38,19 @@ public class BoardManager : MonoBehaviour
         Board board = _boardDB.GetBoard(_selectedOption);
         _boardImage.sprite = board.boardSprite;
         _boardNameText.text = board.boardName;
+    }
+
+    private void Load() {
+        // access the stored player preference
+        _selectedOption = PlayerPrefs.GetInt("_selectedOption");
+    }
+
+    private void Save() {
+        // store player preference to use another game sessions
+        PlayerPrefs.SetInt("_selectedOption", _selectedOption);
+    }
+
+    public void ChangeScene(int sceneID) {
+        SceneManager.LoadScene(sceneID);
     }
 }

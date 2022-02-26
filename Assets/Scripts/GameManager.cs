@@ -8,6 +8,8 @@ using UnityEngine.SceneManagement;
 
 namespace pegsolitaire {
     public class GameManager : MonoBehaviour {
+        private int _selectedOption;
+        
         private int _width; //! is it required to keep (for now yes to save it, actually it depends on SaveGame func)
         private int _height;
         [SerializeField] private Cell _cellPrefab; 
@@ -31,9 +33,18 @@ namespace pegsolitaire {
             _selectedCells = new List<Cell>();
             _allMov = new Stack<Movement>();
             _numberOfMovement = GameObject.Find("Canvas/NumberOfMovement").GetComponent<TMPro.TextMeshProUGUI>();
-            CreateBoard(BoardType.FRENCH);
+            // CreateBoard(BoardType.FRENCH);
             // _numMov = 0;
             // _numPeg = _cells.Count;
+
+            
+            _width = _height = 9;
+            // loaded       
+            if (PlayerPrefs.HasKey("_selectedOption"))
+                Load();
+            else
+                _selectedOption = 0;
+            CreateBoard((BoardType) _selectedOption);
 
             // change the position of the camera as shows center of the game board
             _camera.transform.position = new Vector3((float) _width / 2 - 0.5f, (float) _height / 2 , -10);
@@ -49,6 +60,11 @@ namespace pegsolitaire {
             if (Input.GetKeyDown(KeyCode.S)) 
                 Undo();
         }   
+
+        private void Load() {
+            // access the stored player preference
+            _selectedOption = PlayerPrefs.GetInt("_selectedOption");
+        }
 
         public void Init() {
             gameObject.SetActive(true);
