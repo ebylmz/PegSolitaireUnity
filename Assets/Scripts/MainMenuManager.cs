@@ -15,12 +15,12 @@ public class MainMenuManager : MonoBehaviour
         
     }
 
-    public void startGame() {
+    public void StartGame() {
         SceneManager.LoadScene("Scenes/GameScene");
     }
 
-    public void exitGame() {
+    public void ExitGame() {
         Debug.Log("Exit Application");
-        Application.Quit(1);
+        Application.Quit();
     }
 }

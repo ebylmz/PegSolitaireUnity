@@ -21,18 +21,18 @@ public class Cell : MonoBehaviour {
     public void Init(Vector2Int pos, CellValue val) {
         this.name = pos.ToString();
         _pos = pos;
-        setValue(val);  
+        SetValue(val);  
     }
 
-    public void setPosition(Vector2Int pos) {_pos = pos;}
-    public void setPosition(int x, int y) {
+    public void SetPosition(Vector2Int pos) {_pos = pos;}
+    public void SetPosition(int x, int y) {
         _pos.x = x;
         _pos.y = y;
     }
 
-    public Vector2Int getPosition() {return _pos;}
+    public Vector2Int GetPosition() {return _pos;}
 
-    public void setValue(CellValue v) {
+    public void SetValue(CellValue v) {
         _value = v;
         switch (v) {
             case CellValue.PEG: _rend.material = _pegMaterial; break;
@@ -41,20 +41,20 @@ public class Cell : MonoBehaviour {
             case CellValue.PREDICTED: _rend.material = _predictedMaterial; break;
         }        
     }
-    public CellValue getValue() {return _value;}
+    public CellValue GetValue() {return _value;}
 
     private void OnMouseEnter() {
-        if (getValue() == CellValue.PEG)
+        if (GetValue() == CellValue.PEG)
             _rend.material = _selectedMaterial;
     }
 
     // private void OnMouseOver() {
-    // if (getValue() == CellValue.PEG)
+    // if (GetValue() == CellValue.PEG)
     //     _rend.material = __highlightMaterial;
     // }
 
     private void OnMouseExit() {
-        if (getValue() != CellValue.EMPTY)
+        if (GetValue() != CellValue.EMPTY)
             _rend.material = _pegMaterial;
     }
 }

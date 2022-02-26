@@ -8,7 +8,7 @@ using UnityEngine.SceneManagement;
 
 namespace pegsolitaire {
     public class GameManager : MonoBehaviour {
-        private int _width; //! is it required to keep (for now yes to save it, actually it depends on saveGame func)
+        private int _width; //! is it required to keep (for now yes to save it, actually it depends on SaveGame func)
         private int _height;
         [SerializeField] private Cell _cellPrefab; 
         [SerializeField] private Camera _camera;
@@ -31,7 +31,7 @@ namespace pegsolitaire {
             _selectedCells = new List<Cell>();
             _allMov = new Stack<Movement>();
             _numberOfMovement = GameObject.Find("Canvas/NumberOfMovement").GetComponent<TMPro.TextMeshProUGUI>();
-            createBoard(BoardType.DIAMOND);
+            CreateBoard(BoardType.FRENCH);
             // _numMov = 0;
             // _numPeg = _cells.Count;
 
@@ -40,43 +40,43 @@ namespace pegsolitaire {
         }
 
         void Update() {
-            getSelection();
+            GetSelection();
             
             // checks random movement
             if (Input.GetKeyDown(KeyCode.W))
-                makeRandomMove();   //! debugging needed
-            // checks undo
+                MakeRandomMove();   //! debugging needed
+            // checks Undo
             if (Input.GetKeyDown(KeyCode.S)) 
-                undo();
+                Undo();
         }   
 
-        public void init() {
+        public void Init() {
             gameObject.SetActive(true);
         }
 
-        /* gets the cell selected by user */
-        public void getSelection() {
+        /* Gets the cell selected by user */
+        public void GetSelection() {
             if (Input.GetMouseButtonDown(0)) {
-                // get the current posation of the mouse
+                // Get the current posation of the mouse
                 // then capture the cell at that posation (if there is)
                 Ray ray = _camera.ScreenPointToRay(Input.mousePosition);
                 if (Physics.Raycast(ray, out RaycastHit hitInfo)) {
                     Cell cell = hitInfo.collider.gameObject.GetComponent<Cell>();
                     if (cell != null) {
                         // user first selection should be Peg, and the next is Empty cell
-                        if (cell.getValue() == (_selectedCells.Count == 0 ? Cell.CellValue.PEG : Cell.CellValue.EMPTY))
-                        // cell.getValue() == Cell.CellValue.PEG 
+                        if (cell.GetValue() == (_selectedCells.Count == 0 ? Cell.CellValue.PEG : Cell.CellValue.EMPTY))
+                        // cell.GetValue() == Cell.CellValue.PEG 
                         // make sure to don't select same cell two times
                         if (!_selectedCells.Contains(cell)) {
                             _selectedCells.Add(cell);    
-                            cell.setValue(Cell.CellValue.SELECTED);
+                            cell.SetValue(Cell.CellValue.SELECTED);
 
                             // clear the list after movement made
                             if (_selectedCells.Count == 2) {
                                 // make movement 
-                                if (makeMove(_selectedCells[0], _selectedCells[1])) {
+                                if (MakeMove(_selectedCells[0], _selectedCells[1])) {
                                     // after a valid movement check if game is over
-                                    if (isGameOver()) {
+                                    if (IsGameOver()) {
                                         Debug.Log($"GAME IS OVER \n#Mov: {_numMov} #Peg: {_numPeg}");
                                         SceneManager.LoadScene("Scenes/MainMenuScene");
                                     } //! Game is over shows only in user mod so do something else
@@ -85,8 +85,8 @@ namespace pegsolitaire {
                                 else {
                                     // turn back the previos values to cell
                                     // first cell was peg, second one was empty cell
-                                    _selectedCells[0].setValue(Cell.CellValue.PEG);
-                                    _selectedCells[1].setValue(Cell.CellValue.EMPTY);
+                                    _selectedCells[0].SetValue(Cell.CellValue.PEG);
+                                    _selectedCells[1].SetValue(Cell.CellValue.EMPTY);
                                 }
                                 _selectedCells.Clear();
                             }
@@ -96,40 +96,40 @@ namespace pegsolitaire {
             }
         }
 
-        public bool makeMove(Cell start, Cell end) {
+        public bool MakeMove(Cell start, Cell end) {
             Movement mov = new Movement(_cells, start, end);
             if (mov.isValidMovement()) {
-                Cell jump = mov.getJump();
+                Cell jump = mov.GetJump();
 
                 // update the cell values    
-                start.setValue(Cell.CellValue.EMPTY);
-                jump.setValue(Cell.CellValue.EMPTY);
-                end.setValue(Cell.CellValue.PEG);
+                start.SetValue(Cell.CellValue.EMPTY);
+                jump.SetValue(Cell.CellValue.EMPTY);
+                end.SetValue(Cell.CellValue.PEG);
 
                 // update game status (numMov, numPeg)
                 ++_numMov;
                 --_numPeg;
                 _allMov.Push(mov);
-                updateGameStatus();
+                UpdateGameStatus();
                 return true;
             }
             Debug.Log("Invalid Movement");
             return false;
         }
 
-        public bool makeMove(Movement mov) {return mov != null ? makeMove(mov.getStart(), mov.getEnd()) : false;}
+        public bool MakeMove(Movement mov) {return mov != null ? MakeMove(mov.GetStart(), mov.GetEnd()) : false;}
         
-        public void makeRandomMove() {
+        public void MakeRandomMove() {
             int x = Random.Range(0, _width);
             int y = Random.Range(0, _height);
 
             for (int i = 0; i < _width; ++i) {
                 for (int j = 0; ++j < _height; ++j) {
                     if (_cells.TryGetValue(new Vector2Int(x, y), out Cell start)) {
-                        var movs = getAllMovements(start);
+                        var movs = GetAllMovements(start);
                         // select an random movement and apply it
                         if (movs != null) {
-                            makeMove(movs[Random.Range(0, movs.Count)]); // returns always true
+                            MakeMove(movs[Random.Range(0, movs.Count)]); // returns always true
                             return;
                         }
                     }
@@ -141,30 +141,30 @@ namespace pegsolitaire {
             }
         }
 
-        public void undo() {
+        public void Undo() {
             if (_allMov.Count > 0) {
                 var mov = _allMov.Pop();
                 // update the cell values    
-                mov.getStart().setValue(Cell.CellValue.PEG);
-                mov.getJump().setValue(Cell.CellValue.PEG);
-                mov.getEnd().setValue(Cell.CellValue.EMPTY);
+                mov.GetStart().SetValue(Cell.CellValue.PEG);
+                mov.GetJump().SetValue(Cell.CellValue.PEG);
+                mov.GetEnd().SetValue(Cell.CellValue.EMPTY);
 
                 // update game status (numMov, numPeg)
                 --_numMov;
                 ++_numPeg;
-                updateGameStatus();
+                UpdateGameStatus();
             }
         }
 
         /* returns all the possible movement that can be made with given cell */
-        public List<Movement> getAllMovements(Cell start) {
+        public List<Movement> GetAllMovements(Cell start) {
             List<Movement> allMov = new List<Movement>();
 
-            if (start.getValue() == Cell.CellValue.PEG || start.getValue() == Cell.CellValue.SELECTED) {
+            if (start.GetValue() == Cell.CellValue.PEG || start.GetValue() == Cell.CellValue.SELECTED) {
                 // try the four movement direction
                 for (int dir = 0; dir < 4; ++dir) {
                     Movement mov = new Movement(_cells);
-                    mov.setMovement(start, (Movement.Direction) dir);
+                    mov.SetMovement(start, (Movement.Direction) dir);
                     if (mov.isValidMovement())
                         allMov.Add(mov);
                 }
@@ -174,34 +174,34 @@ namespace pegsolitaire {
             return allMov.Count > 0 ? allMov : null; 
         }
 
-        public bool isGameOver() {
+        public bool IsGameOver() {
             // check if a movement can be made with any cell 
             foreach (var cell in _cells.Values) 
-                if (getAllMovements(cell) != null)
+                if (GetAllMovements(cell) != null)
                     return false;
             return true;
         }
 
-        public void createBoard(BoardType t) {
+        public void CreateBoard(BoardType t) {
             switch (t) {
-                case BoardType.FRENCH: loadGame("Assets/System/GameBoards/French.txt"); break; 
-                case BoardType.GERMAN: loadGame("Assets/System/GameBoards/German.txt"); break; 
-                case BoardType.ASYMETRICAL: loadGame("Assets/System/GameBoards/Asymetrical.txt"); break; 
-                case BoardType.ENGLISH: loadGame("Assets/System/GameBoards/English.txt"); break; 
-                case BoardType.DIAMOND: loadGame("Assets/System/GameBoards/Diamond.txt"); break; 
-                case BoardType.TRIANGULAR: loadGame("Assets/System/GameBoards/Triangular.txt"); break;
+                case BoardType.FRENCH: LoadGame("AsSets/System/GameBoards/French.txt"); break; 
+                case BoardType.GERMAN: LoadGame("AsSets/System/GameBoards/German.txt"); break; 
+                case BoardType.ASYMETRICAL: LoadGame("AsSets/System/GameBoards/Asymetrical.txt"); break; 
+                case BoardType.ENGLISH: LoadGame("AsSets/System/GameBoards/English.txt"); break; 
+                case BoardType.DIAMOND: LoadGame("AsSets/System/GameBoards/Diamond.txt"); break; 
+                case BoardType.TRIANGULAR: LoadGame("AsSets/System/GameBoards/Triangular.txt"); break;
             }
             //! return value
         }
 
-        public void createBoard(string boardName) {
-            loadGame("Assets/System/GameBoards/" + boardName + ".txt");
+        public void CreateBoard(string boardName) {
+            LoadGame("AsSets/System/GameBoards/" + boardName + ".txt");
         }
 
-        public void saveGame() {
+        public void SaveGame() {
             //! dumb everything in the _cells dictionary which contains all the cells 
         }
-        public void loadGame(string path) {
+        public void LoadGame(string path) {
             string[] lines = System.IO.File.ReadAllLines(path);
 
             // first line contains values width, height and number of movements
@@ -242,11 +242,11 @@ namespace pegsolitaire {
             //! it would be great to return succes return value 
         }
 
-        public void exitGame() {
+        public void ExitGame() {
             SceneManager.LoadScene("Scenes/MainMenuScene");
         }
 
-        private void updateGameStatus() {
+        private void UpdateGameStatus() {
            _numberOfMovement.text = $"Number Of Movement:  {_numMov.ToString()}";
         }
 
