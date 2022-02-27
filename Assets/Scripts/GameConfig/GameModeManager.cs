@@ -3,52 +3,55 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using TMPro;
 
-public class GameModeManager : MonoBehaviour
-{
-    [SerializeField] private GameModeDataBase _gameModeDB;
-    [SerializeField] private Text _gameModeText;
-    [SerializeField] private Image _gameModeImage;
-    private int _selectedGameModeOption;
+namespace pegsolitaire {
+    public class GameModeManager : MonoBehaviour {
+        [SerializeField] private GameModeDataBase _gameModeDB;
+        [SerializeField] private TextMeshProUGUI _gameModeText;
 
-    private void Start() {
-        if (PlayerPrefs.HasKey("_selectedGameModeOption"))
-            Load();
-        else
-            _selectedGameModeOption = 0;
-        UpdateBoard();
-    }
+        [SerializeField] private Image _gameModeImage;
+        private int _selectedGameModeOption;
 
-    public void NextOption() {
-        _selectedGameModeOption = (_selectedGameModeOption + 1 < _gameModeDB.GameModeCount) ? _selectedGameModeOption + 1 : 0; 
-        UpdateBoard();
-        Save();
-    }
+        private void Start() {
+            if (PlayerPrefs.HasKey("_selectedGameModeOption"))
+                Load();
+            else
+                _selectedGameModeOption = 0;
+            UpdateBoard();
+        }
 
-    public void backOption() {
-        _selectedGameModeOption = (_selectedGameModeOption - 1 >= 0) ? _selectedGameModeOption - 1 : _gameModeDB.GameModeCount - 1; 
-        UpdateBoard();
-        Save();
-    }
+        public void NextOption() {
+            _selectedGameModeOption = (_selectedGameModeOption + 1 < _gameModeDB.GameModeCount) ? _selectedGameModeOption + 1 : 0; 
+            UpdateBoard();
+            Save();
+        }
 
-    private void UpdateBoard() {
-        // retrieve the board information from DataBase and update the sprite
-        GameMode gmode = _gameModeDB.GetGameMode(_selectedGameModeOption);
-        _gameModeImage.sprite = gmode.gameModeSprite;
-        _gameModeText.text = gmode.gameModeName;
-    }
+        public void backOption() {
+            _selectedGameModeOption = (_selectedGameModeOption - 1 >= 0) ? _selectedGameModeOption - 1 : _gameModeDB.GameModeCount - 1; 
+            UpdateBoard();
+            Save();
+        }
 
-    private void Load() {
-        // access the stored player preference
-        _selectedGameModeOption = PlayerPrefs.GetInt("_selectedGameModeOption");
-    }
+        private void UpdateBoard() {
+            // retrieve the board information from DataBase and update the sprite
+            GameMode gmode = _gameModeDB.GetGameMode(_selectedGameModeOption);
+            _gameModeImage.sprite = gmode.gameModeSprite;
+            _gameModeText.text = gmode.gameModeName;
+        }
 
-    private void Save() {
-        // store player preference to use another game sessions
-        PlayerPrefs.SetInt("_selectedGameModeOption", _selectedGameModeOption);
-    }
+        private void Load() {
+            // access the stored player preference
+            _selectedGameModeOption = PlayerPrefs.GetInt("_selectedGameModeOption");
+        }
 
-    public void ChangeScene(int sceneID) {
-        SceneManager.LoadScene(sceneID);
+        private void Save() {
+            // store player preference to use another game sessions
+            PlayerPrefs.SetInt("_selectedGameModeOption", _selectedGameModeOption);
+        }
+
+        public void ChangeScene(int sceneID) {
+            SceneManager.LoadScene(sceneID);
+        }
     }
 }

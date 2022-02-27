@@ -3,24 +3,17 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class MainMenuManager : MonoBehaviour
-{
-    // Start is called before the first frame update
-    void Start() {
-        
-    }
+namespace pegsolitaire {
+    public class MainMenuManager : MonoBehaviour {
+        public void StartGame() {
+            // start the game (following two line does the same thing)
+            // SceneManager.LoadScene("Scenes/GameScene");
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+        }
 
-    // Update is called once per frame
-    void Update() {
-        
-    }
-
-    public void StartGame() {
-        SceneManager.LoadScene("Scenes/GameScene");
-    }
-
-    public void ExitGame() {
-        Debug.Log("Exit Application");
-        Application.Quit();
+        public void ExitGame() {
+            Debug.Log("Exit Application");
+            Application.Quit();
+        }
     }
 }

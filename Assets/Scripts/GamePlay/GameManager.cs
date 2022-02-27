@@ -11,6 +11,9 @@ namespace pegsolitaire {
 
         [SerializeField] private Cell _cellPrefab; 
         [SerializeField] private Camera _camera;
+        [SerializeField] private AudioSource _audioSource;
+        [SerializeField] private AudioClip _successMov;
+        [SerializeField] private AudioClip _failMov;
         private GameMode _gameMode;
         private BoardType _gameBoardType; 
         private int _width; // width of the game board 
@@ -120,11 +123,22 @@ namespace pegsolitaire {
         }
 
         public IEnumerator PlayAuto() {
+            // MakeRandomMove takes 1 sec to execute so we need to wait wait 
+            // at least one second to finish it it's job. then we can call it again
             while (! IsGameOver()) {
-                yield return new WaitForSeconds(1);
+                yield return new WaitForSeconds(0.2f);
                 MakeRandomMove();
+                yield return new WaitForSeconds(1f);            
             }
         } 
+
+        private IEnumerator AutoMove(Cell start, Cell end) {
+            start.SetValue(Cell.CellValue.SELECTED);
+            yield return new WaitForSeconds(0.5f);            
+            end.SetValue(Cell.CellValue.PREDICTED);
+            yield return new WaitForSeconds(0.5f);            
+            MakeMove(start, end); 
+        }
 
         public bool MakeMove(Cell start, Cell end) {
             Movement mov = new Movement(_cells, start, end);
@@ -141,16 +155,17 @@ namespace pegsolitaire {
                 --_numPeg;
                 _allMov.Push(mov);
                 UpdateGameStatus();
+                
+                // play sound to indicate an valid movemement
+                // _audioSource.PlayOneShot(_successMov, 0.2f);
                 return true;
             }
-            Debug.Log("Invalid Movement");
+            _audioSource.PlayOneShot(_failMov, 0.2f);
             return false;
         }
 
-        public bool MakeMove(Movement mov) {return mov != null ? MakeMove(mov.GetStart(), mov.GetEnd()) : false;}
-        
         public void MakeRandomMove() {
-            // select an cell position and try each cell till make an movement 
+            // select an cell position and try each cell till make a movement 
             int x = Random.Range(0, _width);
             int y = Random.Range(0, _height);
 
@@ -161,8 +176,12 @@ namespace pegsolitaire {
                     if (_cells.TryGetValue(new Vector2Int(x, y), out Cell start)) {
                         endPos = GetPossibleEndPos(start);
                         // select an random movement and apply it
-                        if (endPos != null)
-                            MakeMove(start, endPos[Random.Range(0, endPos.Count)]); 
+                        if (endPos != null) {
+                            Cell end = endPos[Random.Range(0, endPos.Count)];
+
+                            // before movement higligt the cells
+                            StartCoroutine(AutoMove(start, end));
+                        }
                     }
                     // iterate in y axis
                     y = (y + 1 < _height) ? y + 1 : 0; 
@@ -275,9 +294,12 @@ namespace pegsolitaire {
             //! it would be great to return succes return value 
         }
 
-        public void ExitGame() {
+        public void ReturnMainMenu() {
             // turn back the MainMenuScene (following two line does the same thing)
             // SceneManager.LoadScene("Scenes/MainMenuScene");
+            _gameMode = (PlayerPrefs.HasKey("_selectedGameModeOption")) ?
+                (GameMode) PlayerPrefs.GetInt("_selectedGameModeOption") : 0;
+
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex - 1);
         }
 

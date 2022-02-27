@@ -14,14 +14,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _board:
   - boardName: French
+    maxGameScore: 0
     boardSprite: {fileID: 21300000, guid: e92bb742e5d59514f899d4ec21991d3a, type: 3}
   - boardName: German
+    maxGameScore: 0
     boardSprite: {fileID: 21300000, guid: d38ad8f5569b0784e89dd71c9de05857, type: 3}
   - boardName: Asymetrical
+    maxGameScore: 0
     boardSprite: {fileID: 21300000, guid: 571ae944c886b4c4da1da82995e00b4f, type: 3}
   - boardName: English
+    maxGameScore: 0
     boardSprite: {fileID: 21300000, guid: e2d0aed5d4ae13341bf0170a59f0551a, type: 3}
   - boardName: Diamond
+    maxGameScore: 0
     boardSprite: {fileID: 21300000, guid: ee9a6313e16708d4f9b8b655350d8a92, type: 3}
   - boardName: Triangular
+    maxGameScore: 0
     boardSprite: {fileID: 21300000, guid: 346033daf74425141b068f885f6a4365, type: 3}

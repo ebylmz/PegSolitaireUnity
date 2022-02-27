@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace pegsolitaire {
-
     public class Movement {
         private Dictionary<Vector2Int, Cell> _board; // game board for checking validty of movement
         private (int, int) _dimension; // board dimension (number of rows and columns)
