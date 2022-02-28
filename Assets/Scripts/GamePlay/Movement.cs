@@ -133,9 +133,6 @@ namespace pegsolitaire {
         public bool isValidMovement() {
             // jump cell becomes null when start and end positions don't indicate a valid movement
             SetJump();
-
-            // Debug.Log($"Start value: {_start.GetValue()}\nJump value : {_jump.GetValue()} \nEnd value  : {_end.GetValue()}");
-
             return  (_start.GetValue() == Cell.CellValue.PEG || _start.GetValue() == Cell.CellValue.SELECTED) && 
                     (_jump != null && _jump.GetValue() == Cell.CellValue.PEG) &&
                     (_end.GetValue() == Cell.CellValue.SELECTED || _end.GetValue() == Cell.CellValue.EMPTY || _end.GetValue() == Cell.CellValue.PREDICTED);

@@ -39,9 +39,11 @@ namespace pegsolitaire {
             _boardImage.sprite = board.boardSprite;
             _boardNameText.text = board.boardName;
 
-            //!!!!!!!!!        
-            if (board.maxGameScore != 0)
-                _maxGameScore.text = "Best: " + board.maxGameScore;
+            // access the player best score on given board
+            if (PlayerPrefs.HasKey("_" + _selectedBoardOption + "BoardScore")) {
+                int maxScore = PlayerPrefs.GetInt("_" + _selectedBoardOption + "BoardScore");
+                _maxGameScore.text = "Best: " + maxScore;
+            }
             else
                 _maxGameScore.text = "";
         }

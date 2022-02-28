@@ -3,23 +3,31 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using TMPro;
 
 namespace pegsolitaire {
     public class GameManager : MonoBehaviour {
-        public enum BoardType {FRENCH, GERMAN, ASYMETRICAL, ENGLISH, DIAMOND, TRIANGULAR}
+        public enum BoardType {FRENCH, GERMAN, ASYMETRICAL, ENGLISH, DIAMOND, TRIANGULAR, SQUARE}
         public enum GameMode {USER, COMPUTER}
 
+        [SerializeField] private BoardDataBase _boardDB;
+        [SerializeField] private Image _gameOverPanel;
+        [SerializeField] private GameObject _gameRulesPanel;
         [SerializeField] private Cell _cellPrefab; 
         [SerializeField] private Camera _camera;
         [SerializeField] private AudioSource _audioSource;
-        [SerializeField] private AudioClip _successMov;
-        [SerializeField] private AudioClip _failMov;
+        [SerializeField] private AudioClip _loserSound;
+        [SerializeField] private AudioClip _winnerSound;
+        [SerializeField] private AudioClip _wrongMovSound;
+        [SerializeField] private TextMeshProUGUI _textNumMov;
+        [SerializeField] private TextMeshProUGUI _textNumPeg;
+        [SerializeField] private Button _undoBtn; 
+        [SerializeField] private Button _nextMoveBtn; 
         private GameMode _gameMode;
         private BoardType _gameBoardType; 
         private int _width; // width of the game board 
         private int _height; // height of game board
         private Dictionary<Vector2Int, Cell> _cells;
-        private TMPro.TextMeshProUGUI _numberOfMovement; //! file that keeps number of movement 
         private Stack<Movement> _allMov; // keeps all the movement made so far
         private List<Cell> _possibleEndCells; // to show the player end positions for their movement
         private Cell _startCell;    // keeps the start position of the movement
@@ -31,7 +39,6 @@ namespace pegsolitaire {
             _startCell = null;
             _allMov = new Stack<Movement>();
             _possibleEndCells = new List<Cell>();
-            _numberOfMovement = GameObject.Find("Canvas/NumberOfMovement").GetComponent<TMPro.TextMeshProUGUI>();
             
             // access the stored player preference
             _gameMode = (PlayerPrefs.HasKey("_selectedGameModeOption")) ?
@@ -42,19 +49,25 @@ namespace pegsolitaire {
 
         void Start() {
             // create the game board
-            CreateBoard(_gameBoardType);
+            LoadGame();
 
             // change the position of the camera as shows center of the game board
             _camera.transform.position = new Vector3((float) _width / 2 - 0.5f, (float) _height / 2 , -10);
 
+            // there is no movement made yet
+            _undoBtn.gameObject.SetActive(false);
+            
             // start computer game  
-            if (_gameMode == GameMode.COMPUTER)
+            if (_gameMode == GameMode.COMPUTER) {
+                _nextMoveBtn.gameObject.SetActive(false);
                 StartCoroutine(PlayAuto());
+            }
         }
 
         void Update() {
             // user cannot make movement in ComputerPlay mode
-            if (_gameMode == GameMode.USER) 
+            // do not get movement mouse if another panel is active
+            if (_gameMode == GameMode.USER && !_gameRulesPanel.gameObject.activeSelf)
                 GetSelection();
         }   
 
@@ -86,17 +99,8 @@ namespace pegsolitaire {
                                     selectedCell.GetValue() == Cell.CellValue.PREDICTED) && 
                                     _startCell != null) { 
                             // here we have start and end position of the movement, so try to move!
-                            if (MakeMove(_startCell, selectedCell)) {
-                                // after a valid movement check if the game is over
-                                //! Game is over showns only in user mod so do something else
-                                if (IsGameOver()) {
-                                    Debug.Log($"GAME IS OVER \n#Mov: {_numMov} #Peg: {_numPeg}");
-                                    // load main menu after game is over
-                                    SceneManager.LoadScene("Scenes/MainMenuScene");
-                                } 
-                            }
                             // convert the hovering cell to it's original view
-                            else
+                            if (! MakeMove(_startCell, selectedCell))
                                 _startCell.SetValue(Cell.CellValue.PEG);
                             // set selected startCell as null for next movement
                             DisplayPossibleMove(false);
@@ -133,11 +137,15 @@ namespace pegsolitaire {
         } 
 
         private IEnumerator AutoMove(Cell start, Cell end) {
+            if (_gameMode == GameMode.USER)
+                _nextMoveBtn.gameObject.SetActive(false);
             start.SetValue(Cell.CellValue.SELECTED);
             yield return new WaitForSeconds(0.5f);            
             end.SetValue(Cell.CellValue.PREDICTED);
             yield return new WaitForSeconds(0.5f);            
             MakeMove(start, end); 
+            if (_gameMode == GameMode.USER)
+                _nextMoveBtn.gameObject.SetActive(true);
         }
 
         public bool MakeMove(Cell start, Cell end) {
@@ -155,12 +163,18 @@ namespace pegsolitaire {
                 --_numPeg;
                 _allMov.Push(mov);
                 UpdateGameStatus();
+
+                // make undo button active (only in user game)
+                if (_gameMode == GameMode.USER && !_undoBtn.gameObject.activeSelf)
+                    _undoBtn.gameObject.SetActive(true);
                 
-                // play sound to indicate an valid movemement
-                // _audioSource.PlayOneShot(_successMov, 0.2f);
+                // after a valid movement check if the game is over
+                if (IsGameOver())
+                    StartCoroutine(DisplayGameOverPanel());
+                
                 return true;
             }
-            _audioSource.PlayOneShot(_failMov, 0.2f);
+            _audioSource.PlayOneShot(_wrongMovSound, 0.1f);
             return false;
         }
 
@@ -189,7 +203,6 @@ namespace pegsolitaire {
                 // iterate in x axis
                 x = (x + 1 < _width) ? x + 1 : 0; 
             }
-            DisplayPossibleMove(false); //!!!!!!
         }
 
         public void Undo() {
@@ -204,7 +217,9 @@ namespace pegsolitaire {
                 --_numMov;
                 ++_numPeg;
 
-                DisplayPossibleMove(false); //!!!!!!
+                if (_allMov.Count == 0)
+                    _undoBtn.gameObject.SetActive(false);
+
                 UpdateGameStatus();
             }
         }
@@ -233,31 +248,11 @@ namespace pegsolitaire {
             return true;
         }
 
-        public void CreateBoard(BoardType t) {
-            switch (t) {
-                case BoardType.FRENCH: LoadGame("AsSets/System/GameBoards/French.txt"); break; 
-                case BoardType.GERMAN: LoadGame("AsSets/System/GameBoards/German.txt"); break; 
-                case BoardType.ASYMETRICAL: LoadGame("AsSets/System/GameBoards/Asymetrical.txt"); break; 
-                case BoardType.ENGLISH: LoadGame("AsSets/System/GameBoards/English.txt"); break; 
-                case BoardType.DIAMOND: LoadGame("AsSets/System/GameBoards/Diamond.txt"); break; 
-                case BoardType.TRIANGULAR: LoadGame("AsSets/System/GameBoards/Triangular.txt"); break;
-            }
-            //! return value
-        }
-
-        public void CreateBoard(string boardName) {
-            LoadGame("AsSets/System/GameBoards/" + boardName + ".txt");
-        }
-
-        public void SaveGame() {
-            //! dumb everything in the _cells dictionary which contains all the cells 
-        }
-
-        public void LoadGame(string path) {
-            string[] lines = System.IO.File.ReadAllLines(path);
-
+        public void LoadGame() {
+            List<string> lines = _boardDB.GetBoardLayout((int) _gameBoardType);
+            
             // first line contains values width, height and number of movements
-            if (lines.Length > 0) {
+            if (lines.Count > 0) {
                 string[] values = lines[0].Split();
                 if (values.Length < 3) 
                     throw new System.ArgumentException();
@@ -270,11 +265,11 @@ namespace pegsolitaire {
                 Vector2Int pos = new Vector2Int(); // position of the cell 
                 
                 // we already scan the first line (line[0])
-                for (int y = lines.Length - 1; y > 0; --y) {
+                for (int y = lines.Count - 1; y > 0; --y) {
                     pos.y = _height - y; // ++ also works
                     for (int x = 0; x <= lines[y].Length / 2; ++x) {
                         pos.x = x;
-                        switch (lines[y][x * 2]) { //! x * 2 is not safe
+                        switch (lines[y][x * 2]) { 
                             case '.': // Empty
                                 InstantiateCell(pos, Cell.CellValue.EMPTY); 
                                 break;
@@ -282,16 +277,10 @@ namespace pegsolitaire {
                                 InstantiateCell(pos, Cell.CellValue.PEG); 
                                 ++_numPeg;
                                 break;
-                            case ' ': // Wall
-                                // InstantiateCell(pos); 
-                                break;
-                            // default: 
-                            //     return false;
                         }
                     }
                 }
             }  
-            //! it would be great to return succes return value 
         }
 
         public void ReturnMainMenu() {
@@ -299,12 +288,27 @@ namespace pegsolitaire {
             // SceneManager.LoadScene("Scenes/MainMenuScene");
             _gameMode = (PlayerPrefs.HasKey("_selectedGameModeOption")) ?
                 (GameMode) PlayerPrefs.GetInt("_selectedGameModeOption") : 0;
+            if (_gameMode == GameMode.USER)
+                PlayerPrefs.SetInt("_" + (int) _gameBoardType + "BoardScore", _numPeg);
 
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex - 1);
         }
 
+        private IEnumerator DisplayGameOverPanel() {
+            yield return new WaitForSeconds(1f);
+            _audioSource.PlayOneShot(_numPeg == 1 ? _winnerSound : _loserSound);
+            _gameOverPanel.gameObject.SetActive(true);
+        }
+
         private void UpdateGameStatus() {
-           _numberOfMovement.text = $"Number Of Movement:  {_numMov.ToString()}";
+           _textNumMov.text = $"Number Of Movement:  {_numMov.ToString()}";
+           _textNumPeg.text = $"Peg Remain:  {_numPeg.ToString()}";
+        }
+
+        public void ReplayGame() {
+            // reload the game scene again this will cause
+            // to recreating each object in the scene
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
 
         private Cell InstantiateCell(Vector2Int pos, Cell.CellValue val) {
