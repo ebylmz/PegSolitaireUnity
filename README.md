@@ -4,7 +4,7 @@ Welcome to Peg Solitaire, a Unity-based game implementation for the CSE241 Winte
 
 ## 📜 Overview
 
-Discover the rules and gameplay in our concise overview of the game, available [here](link-to-game-overview). 🕹️
+Discover the rules and gameplay in our concise overview of the game, available [here](https://github.com/ebylmz/PegSolitaireUnity/blob/main/PegSolitaire.pdf). 🕹️
 
 ## 🚀 Try It Out! 
 
